@@ -1,0 +1,55 @@
+# Local tooling
+.superpowers/
+.cursor/
+
+# Secrets
+.env
+**/.env
+*.pem
+
+# Python
+**/.venv/
+**/venv/
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+*.db
+
+# Node / Vite
+**/node_modules/
+**/dist/
+.vite
+*.local
+
+# Flutter / Dart
+**/.dart_tool/
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.pub/
+**/build/
+**/coverage/
+
+# Runtime uploads
+backend/uploads/
+
+# Training weights (too large for GitHub; keep exported TFLite in app/assets)
+**/*.pt
+**/*.pth
+**/*.keras
+**/*.h5
+**/*.onnx
+**/*.onnx.data
+app/docs/detector/*.zip
+app/model_rice_leaf_v2/
+web/model_rice_leaf_v2/
+backend/ml/**/*.pt
+backend/ml/**/*.onnx
+backend/ml/**/*.keras
+
+# Temp / scratch
+**/_tmp_*
+*.log
+.DS_Store
+Thumbs.db

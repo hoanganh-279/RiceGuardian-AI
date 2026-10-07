@@ -28,8 +28,8 @@ class ApiClient {
     return trimmed.endsWith('/') ? trimmed.substring(0, trimmed.length - 1) : trimmed;
   }
 
-  /// UI-only monorepo: never call remote farmer API.
-  bool get isConfigured => false;
+  /// Online only when built with `--dart-define=API_BASE_URL=...`; otherwise offline demo.
+  bool get isConfigured => baseUrl.isNotEmpty;
 
   Uri _uri(String path) {
     final normalized = path.startsWith('/') ? path : '/$path';

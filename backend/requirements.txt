@@ -1,0 +1,2 @@
+# Staff / web API — includes BLB UAV ML stack
+-r ../packages/rg_core/requirements-ml.txt

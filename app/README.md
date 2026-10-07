@@ -96,7 +96,7 @@ Mọi màn hình Flutter phải tuân theo bảng màu sau (không tự ý đổ
 | **Đăng nhập** | Flask JWT + Supabase Auth (offline demo nếu thiếu `API_BASE_URL`) | `lib/services/auth_service.dart`, `lib/services/api_client.dart` |
 | **AI nhận diện** | On-device TFLite (EfficientNetB3 int8, pipeline v3 trial) | `lib/services/ai_service.dart` |
 
-> API nông dân / staff: repo backend riêng. Monorepo app = **UI-only** (demo login + số liệu hệ thống = `-`). `packages/rg_core` chỉ phục vụ `site/backend`.
+> API nông dân: `backend/run_app.py` (profile `app`, port 5000) — xem `README.md` ở thư mục gốc. Không truyền `API_BASE_URL` thì app chạy offline.
 
 ### Nguyên tắc Offline-first
 
@@ -108,7 +108,8 @@ App **hoạt động không cần mạng** cho dữ liệu nghiệp vụ trên m
 
 ### Cấu hình
 
-Không còn `API_BASE_URL`. Launch config: **RiceGuardian (offline)** trong `.vscode/launch.json`.
+- Offline: `flutter run` (không cần backend).
+- Online: `flutter run --dart-define=API_BASE_URL=http://10.0.2.2:5000` (emulator) — các cách khác xem `README.md` ở thư mục gốc.
 
 ### Tối ưu hiệu năng
 
