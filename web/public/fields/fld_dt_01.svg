@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400" viewBox="0 0 640 400" role="img" aria-label="UAV RGB field P1">
+  <rect width="640" height="400" fill="#7cb342"/>
+  <path d="M0 80h640M0 160h640M0 240h640M0 320h640" stroke="#558b2f" stroke-width="10"/>
+  <path d="M40 0v400M140 0v400M240 0v400M340 0v400M440 0v400M540 0v400" stroke="#9ccc65" stroke-width="6"/>
+  <rect x="420" y="40" width="180" height="90" fill="#c8e6c9" opacity="0.55"/>
+  <text x="24" y="36" fill="#1b5e20" font-size="18" font-family="system-ui,sans-serif">UAV RGB · P1</text>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400" viewBox="0 0 640 400" role="img" aria-label="UAV RGB field M12">
+  <rect width="640" height="400" fill="#66bb6a"/>
+  <path d="M0 50 Q160 90 320 50 T640 50" fill="none" stroke="#2e7d32" stroke-width="28"/>
+  <path d="M0 150 Q160 110 320 150 T640 150" fill="none" stroke="#43a047" stroke-width="22"/>
+  <path d="M0 250 Q160 290 320 250 T640 250" fill="none" stroke="#2e7d32" stroke-width="28"/>
+  <path d="M0 340 Q160 300 320 340 T640 340" fill="none" stroke="#81c784" stroke-width="18"/>
+  <rect x="48" y="280" width="120" height="70" fill="#fff59d" opacity="0.45"/>
+  <text x="24" y="36" fill="#1b5e20" font-size="18" font-family="system-ui,sans-serif">UAV RGB · M12</text>
+</svg>

@@ -1,0 +1,109 @@
+{
+  "model_file": "rice_leaf_cls_int8.tflite",
+  "backbone": "efficientnetb3",
+  "preprocess": "efficientnet",
+  "img_size": [
+    300,
+    300
+  ],
+  "temperature": 1.0,
+  "reject_threshold": 0.45,
+  "quantization": "int8",
+  "on_device": true,
+  "yolo_on_device": true,
+  "class_indices_file": "class_indices.json",
+  "latency_ms_kaggle_cpu_smoke": 72.13134765625,
+  "tta_views": [
+    "orig",
+    "hflip",
+    "vflip"
+  ],
+  "gate_passed": false,
+  "release_channel": "trial",
+  "source_checkpoint": "/kaggle/input/datasets/anhnguynthvan/checkpoint/session_b_checkpoint",
+  "gate": {
+    "passed": false,
+    "target_accuracy": 0.85,
+    "cls_test_acc": 0.8068783283233643,
+    "macro_f1": 0.8100781625469603,
+    "pipeline_acc": 0.6402116402116402,
+    "gate_use_tta": true,
+    "gate_acc": 0.8015873015873016,
+    "gate_macro_f1": 0.8056715476024009
+  },
+  "tflite_test_acc": 0.7671957671957672,
+  "tflite_test_acc_tta": 0.7592592592592593,
+  "keras_test_acc_tta_same_input": 0.791005291005291,
+  "tflite_acc_drop": 0.031746031746031744,
+  "detector": {
+    "model_file": "rice_det_yolov8s_float32.tflite",
+    "quantization": "float32",
+    "input": {
+      "dtype": "float32",
+      "shape": [
+        1,
+        640,
+        640,
+        3
+      ],
+      "quantization": [
+        0.0,
+        0
+      ]
+    },
+    "output": {
+      "dtype": "float32",
+      "shape": [
+        1,
+        13,
+        8400
+      ],
+      "quantization": [
+        0.0,
+        0
+      ]
+    },
+    "imgsz": 640,
+    "letterbox": true,
+    "input_range": [
+      0,
+      1
+    ],
+    "coords_normalized": true,
+    "output_layout": "xywh + class scores, no NMS",
+    "conf_thresh": 0.15,
+    "nms_iou": 0.7,
+    "crop_padding": 0.25,
+    "class_names": [
+      "Rice__BacterialLeafBlight",
+      "Rice__BrownSpot",
+      "Rice__Healthy",
+      "Rice__Hispa",
+      "Rice__LeafBlast",
+      "Rice__LeafScald",
+      "Rice__LeafSmut",
+      "Rice__NarrowBrownLeafSpot",
+      "Rice__NeckBlast"
+    ],
+    "labels_informational_only": true,
+    "map50_pt": null,
+    "map50_tflite": null,
+    "export_path": "ultralytics",
+    "export_versions": {
+      "ultralytics": "8.4.82",
+      "tensorflow": "2.20.0",
+      "onnx2tf": "1.28.8",
+      "tf_keras": "2.20.0",
+      "onnx-graphsurgeon": "0.6.1",
+      "sng4onnx": "2.0.1",
+      "ai-edge-litert": "2.3.0",
+      "onnxslim": "0.1.97",
+      "onnxruntime": "1.30.0"
+    },
+    "det_eval": false
+  },
+  "region_rules": {
+    "primary_from": "full_image_classifier",
+    "second_disease_min_conf": 0.5
+  }
+}
