@@ -43,8 +43,10 @@
 		</array>
 		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true/>
-		<key>UIApplicationSupportsIndirectInputEvents</key>
-		<true/>
+<key>NSLocalNetworkUsageDescription</key>
+	<string>Ứng dụng cần truy cập mạng cục bộ để nhận dữ liệu cảm biến LoRa từ trạm trong cùng mạng Wi-Fi.</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
 	</dict>

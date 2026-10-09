@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/alert_model.dart';
 import '../models/field_model.dart';
+import '../models/mqtt_config.dart';
 import '../models/notification_model.dart';
 import '../models/photo_model.dart';
 import '../models/user_model.dart';
@@ -25,6 +26,7 @@ class LocalStore {
   static const _kNotifications = 'rg_notifications';
   static const _kSettings = 'rg_settings';
   static const _kFieldLogs = 'rg_field_logs';
+  static const _kMqttConfig = 'rg_mqtt_config';
   static const _kSeeded = 'rg_seeded';
   static const _kSeedVersion = 'rg_seed_v';
   static const seedVersion = 3;
@@ -55,7 +57,11 @@ class LocalStore {
         _kSettings,
         jsonEncode({'notificationsEnabled': true, 'language': 'vi'}),
       );
-      await _writeJsonList(prefs, _kFields, _seedFields().map((f) => f.toJson()));
+      await _writeJsonList(
+        prefs,
+        _kFields,
+        _seedFields().map((f) => f.toJson()),
+      );
       await prefs.setString(_kAlerts, '[]');
       await prefs.setString(_kNotifications, '[]');
     } else {
@@ -69,13 +75,18 @@ class LocalStore {
   Future<void> _migrateDemoSeed(SharedPreferences prefs) async {
     final fields = _decodeFields(prefs.getString(_kFields));
     if (_isLegacyDemoFields(fields)) {
-      await _writeJsonList(prefs, _kFields, _seedFields().map((f) => f.toJson()));
+      await _writeJsonList(
+        prefs,
+        _kFields,
+        _seedFields().map((f) => f.toJson()),
+      );
     }
 
     final userRaw = prefs.getString(_kSessionUser);
     if (userRaw != null && userRaw.isNotEmpty) {
-      final user =
-          UserModel.fromJson(jsonDecode(userRaw) as Map<String, dynamic>);
+      final user = UserModel.fromJson(
+        jsonDecode(userRaw) as Map<String, dynamic>,
+      );
       if (_isLegacyDemoUser(user)) {
         await setSessionUser(
           demoUser(fullName: demoFarmerName, phone: user.phone),
@@ -83,12 +94,14 @@ class LocalStore {
       }
     }
 
-    final alerts = _decodeAlerts(prefs.getString(_kAlerts))
-        .where((a) => !a.id.startsWith('alert-seed-'));
+    final alerts = _decodeAlerts(
+      prefs.getString(_kAlerts),
+    ).where((a) => !a.id.startsWith('alert-seed-'));
     await _writeJsonList(prefs, _kAlerts, alerts.map((a) => a.toJson()));
 
-    final notifications = _decodeNotifications(prefs.getString(_kNotifications))
-        .where((n) => !n.id.startsWith('notif-seed-'));
+    final notifications = _decodeNotifications(
+      prefs.getString(_kNotifications),
+    ).where((n) => !n.id.startsWith('notif-seed-'));
     await _writeJsonList(
       prefs,
       _kNotifications,
@@ -139,43 +152,43 @@ class LocalStore {
   }
 
   List<FieldModel> _seedFields() => [
-        FieldModel(
-          id: 'field-p1',
-          name: 'Thửa P1 — giồng cát',
-          areaHa: 1.8,
-          variety: 'OM 5451',
-          currentSeason: 'Hè Thu 2026',
-          lat: 10.498,
-          lng: 105.612,
-        ),
-        FieldModel(
-          id: 'field-p3',
-          name: 'Thửa P3 — bờ tây',
-          areaHa: 2.1,
-          variety: 'Đài Thơm 8',
-          currentSeason: 'Hè Thu 2026',
-          lat: 10.512,
-          lng: 105.631,
-        ),
-        FieldModel(
-          id: 'field-k8',
-          name: 'Thửa kênh 8 — đầu bờ',
-          areaHa: 1.2,
-          variety: 'OM 18',
-          currentSeason: 'Hè Thu 2026',
-          lat: 10.505,
-          lng: 105.620,
-        ),
-        FieldModel(
-          id: 'field-bd',
-          name: 'Thửa bưng — cuối kênh',
-          areaHa: 0.9,
-          variety: 'IR 50404',
-          currentSeason: 'Hè Thu 2026',
-          lat: 10.490,
-          lng: 105.605,
-        ),
-      ];
+    FieldModel(
+      id: 'field-p1',
+      name: 'Thửa P1 — giồng cát',
+      areaHa: 1.8,
+      variety: 'OM 5451',
+      currentSeason: 'Hè Thu 2026',
+      lat: 10.498,
+      lng: 105.612,
+    ),
+    FieldModel(
+      id: 'field-p3',
+      name: 'Thửa P3 — bờ tây',
+      areaHa: 2.1,
+      variety: 'Đài Thơm 8',
+      currentSeason: 'Hè Thu 2026',
+      lat: 10.512,
+      lng: 105.631,
+    ),
+    FieldModel(
+      id: 'field-k8',
+      name: 'Thửa kênh 8 — đầu bờ',
+      areaHa: 1.2,
+      variety: 'OM 18',
+      currentSeason: 'Hè Thu 2026',
+      lat: 10.505,
+      lng: 105.620,
+    ),
+    FieldModel(
+      id: 'field-bd',
+      name: 'Thửa bưng — cuối kênh',
+      areaHa: 0.9,
+      variety: 'IR 50404',
+      currentSeason: 'Hè Thu 2026',
+      lat: 10.490,
+      lng: 105.605,
+    ),
+  ];
 
   /// No sensor feed on device — every metric shows [metricDash].
   Map<String, dynamic> sensorPlaceholder(String fieldId) {
@@ -195,13 +208,13 @@ class LocalStore {
   }
 
   UserModel demoUser({String? fullName, String? phone}) => UserModel(
-        id: 'local-farmer-1',
-        fullName: fullName ?? demoFarmerName,
-        email: demoFarmerEmail,
-        phone: phone ?? demoPhone,
-        role: 'farmer',
-        organizationIds: const ['local'],
-      );
+    id: 'local-farmer-1',
+    fullName: fullName ?? demoFarmerName,
+    email: demoFarmerEmail,
+    phone: phone ?? demoPhone,
+    role: 'farmer',
+    organizationIds: const ['local'],
+  );
 
   Future<UserModel?> getSessionUser() async {
     final raw = (await _p).getString(_kSessionUser);
@@ -246,6 +259,21 @@ class LocalStore {
 
   Future<void> setPassword(String password) async {
     await (await _p).setString(_kPassword, password);
+  }
+
+  Future<MqttConfig> getMqttConfig() async {
+    await ensureSeeded();
+    final raw = (await _p).getString(_kMqttConfig);
+    if (raw == null || raw.isEmpty) return const MqttConfig();
+    try {
+      return MqttConfig.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+    } catch (_) {
+      return const MqttConfig();
+    }
+  }
+
+  Future<void> saveMqttConfig(MqttConfig config) async {
+    await (await _p).setString(_kMqttConfig, jsonEncode(config.toJson()));
   }
 
   Future<List<FieldModel>> getFields() async {
@@ -321,8 +349,7 @@ class LocalStore {
           type: 'image',
           riskLevel: confidence >= 0.7 ? 'high' : 'medium',
           title: 'Phát hiện: $disease',
-          summary:
-              'Ảnh chụp trên $fieldName — độ tin cậy $metricDash.',
+          summary: 'Ảnh chụp trên $fieldName — độ tin cậy $metricDash.',
           createdAt: DateTime.now().toIso8601String(),
           confidence: confidence,
         ),

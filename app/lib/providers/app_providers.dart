@@ -11,6 +11,7 @@ import '../services/app_exception.dart';
 import '../services/auth_service.dart';
 import '../services/farmer_remote_service.dart';
 import '../services/site_news_service.dart';
+import 'mqtt_provider.dart';
 
 class AuthProvider extends ChangeNotifier {
   AuthProvider(this._authService);
@@ -162,11 +163,14 @@ class AuthProvider extends ChangeNotifier {
 }
 
 class AppDataProvider extends ChangeNotifier {
-  AppDataProvider(this._auth);
+  AppDataProvider(this._auth, this.mqtt);
 
   final AuthProvider _auth;
+  final MqttDataProvider mqtt;
 
-  late final FarmerRemoteService _remote = FarmerRemoteService(_auth.authService);
+  late final FarmerRemoteService _remote = FarmerRemoteService(
+    _auth.authService,
+  );
 
   FarmerRemoteService get remote => _remote;
 
@@ -262,7 +266,12 @@ class AppDataProvider extends ChangeNotifier {
     const limit = 20;
     final start = (page - 1) * limit;
     if (start >= all.length) {
-      return PaginatedResult(items: [], page: page, limit: limit, total: all.length);
+      return PaginatedResult(
+        items: [],
+        page: page,
+        limit: limit,
+        total: all.length,
+      );
     }
     final end = (start + limit).clamp(0, all.length);
     final items = all.sublist(start, end);
@@ -304,8 +313,18 @@ class AppDataProvider extends ChangeNotifier {
   }
 
   Future<Map<String, dynamic>?> loadSensor(String fieldId) async {
-    if (usesRemote) {
-      return null;
+    final reading = mqtt.readingForField(fieldId, fields);
+    if (reading != null) {
+      return {
+        'station': 'Node ${reading.nodeId}',
+        'batteryPct': reading.battery?.toString(),
+        'rssi': reading.rssi,
+        'hop': reading.hop,
+        'seq': reading.seq,
+        'lastAt': reading.recordedAt.toIso8601String(),
+        'reading': reading.toJson(),
+        'hints': <String>[],
+      };
     }
     return _auth.authService.store.sensorPlaceholder(fieldId);
   }

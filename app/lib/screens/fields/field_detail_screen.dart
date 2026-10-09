@@ -10,11 +10,33 @@ import '../../models/alert_model.dart';
 import '../../models/field_model.dart';
 import '../../models/photo_model.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/mqtt_provider.dart';
+import '../../services/mqtt_service.dart';
 import '../../utils/metric_display.dart';
 import '../../widgets/alert_badge.dart';
 import '../../widgets/rice/rice.dart';
 import '../field_log/field_log_sheet.dart';
 import 'fields_list_screen.dart' show alertsForField, highestRisk;
+
+String _mqttStatusLabel(MqttDataProvider mqtt) {
+  switch (mqtt.status) {
+    case MqttLinkStatus.connected:
+      return 'Trực tuyến';
+    case MqttLinkStatus.connecting:
+      return 'Đang kết nối';
+    case MqttLinkStatus.disconnected:
+      return 'Mất kết nối';
+    case MqttLinkStatus.idle:
+      return 'Chưa bật';
+  }
+}
+
+String _ageText(DateTime at) {
+  final diff = DateTime.now().difference(at);
+  if (diff.inSeconds < 60) return '${diff.inSeconds}s';
+  if (diff.inMinutes < 60) return '${diff.inMinutes}p';
+  return '${diff.inHours}h';
+}
 
 const _sensorIcons = <String, IconData>{
   'tempC': Icons.thermostat,
@@ -34,22 +56,13 @@ class FieldDetailScreen extends StatefulWidget {
 }
 
 class _FieldDetailScreenState extends State<FieldDetailScreen> {
-  Map<String, dynamic>? _sensor;
-  bool _sensorLoaded = false;
-
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       final data = context.read<AppDataProvider>();
       if (data.alerts.isEmpty) data.refreshAlerts();
       if (data.photos.isEmpty) _loadPhotos(data);
-      final sensor = await data.loadSensor(widget.field.id);
-      if (!mounted) return;
-      setState(() {
-        _sensor = sensor;
-        _sensorLoaded = true;
-      });
     });
   }
 
@@ -71,13 +84,13 @@ class _FieldDetailScreenState extends State<FieldDetailScreen> {
   Widget build(BuildContext context) {
     final field = widget.field;
     final data = context.watch<AppDataProvider>();
-    final usesRemote = data.usesRemote;
+    final mqtt = context.watch<MqttDataProvider>();
     final fieldAlerts = alertsForField(data.alerts, field);
-    final fieldPhotos =
-        data.photos.where((p) => p.fieldId == field.id).take(4).toList();
-    final hints =
-        (_sensor?['hints'] as List<dynamic>? ?? const []).cast<String>();
-    final offline = !usesRemote || _sensor == null;
+    final fieldPhotos = data.photos
+        .where((p) => p.fieldId == field.id)
+        .take(4)
+        .toList();
+    final reading = mqtt.readingForField(field.id, data.fields);
 
     return Scaffold(
       appBar: AppBar(title: Text(field.name, overflow: TextOverflow.ellipsis)),
@@ -132,63 +145,109 @@ class _FieldDetailScreenState extends State<FieldDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
-                  'Cảm biến IoT',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 12),
-                if (!_sensorLoaded)
-                  const RiceSkeleton(height: 120, radius: 12)
-                else ...[
-                  GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                    childAspectRatio: 2.2,
-                    children: [
-                      for (final m in kSensorMetrics)
-                        SensorTile(
-                          icon: _sensorIcons[m.key] ?? Icons.sensors,
-                          label: m.short,
-                          value: metricDash,
-                          unit: m.unit,
-                        ),
-                    ],
-                  ),
-                  if (offline) ...[
-                    const SizedBox(height: 12),
-                    const OfflineBanner(
-                      message:
-                          'Chế độ offline: dữ liệu cảm biến IoT không khả dụng trên máy này.',
-                    ),
-                    const SizedBox(height: 6),
+                Row(
+                  children: [
                     const Text(
-                      'Cần kết nối mạng để xem cảm biến',
+                      'Cảm biến IoT',
                       style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ],
-                  for (final h in hints) ...[
-                    const SizedBox(height: 8),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(
-                          Icons.info_outline,
-                          size: 16,
+                    const Spacer(),
+                    if (mqtt.enabled) ...[
+                      Icon(
+                        mqtt.status == MqttLinkStatus.connected
+                            ? Icons.circle
+                            : Icons.circle_outlined,
+                        size: 12,
+                        color: mqtt.status == MqttLinkStatus.connected
+                            ? AppColors.primary
+                            : AppColors.secondary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _mqttStatusLabel(mqtt),
+                        style: const TextStyle(
+                          fontSize: 12,
                           color: AppColors.textSecondary,
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(h, style: const TextStyle(fontSize: 13)),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ],
+                ),
+                const SizedBox(height: 12),
+                GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  mainAxisSpacing: 8,
+                  crossAxisSpacing: 8,
+                  childAspectRatio: 2.2,
+                  children: [
+                    for (final m in kSensorMetrics)
+                      SensorTile(
+                        icon: _sensorIcons[m.key] ?? Icons.sensors,
+                        label: m.short,
+                        value: formatMetricValue(
+                          m.key,
+                          reading?.valueFor(m.key),
+                        ),
+                        unit: m.unit,
+                      ),
+                  ],
+                ),
+                if (reading != null) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.router_outlined,
+                        size: 16,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Node ${reading.nodeId} · RSSI ${reading.rssi ?? metricDash} dBm · ${reading.hop ?? 0} hop · cập nhật ${_ageText(reading.recordedAt)} trước',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                if (!mqtt.enabled) ...[
+                  const SizedBox(height: 12),
+                  const OfflineBanner(
+                    message:
+                        'Chưa bật kết nối trạm LoRa. Vào Cài đặt để cấu hình broker MQTT.',
+                  ),
+                  const SizedBox(height: 6),
+                ] else if (mqtt.status == MqttLinkStatus.disconnected) ...[
+                  const SizedBox(height: 12),
+                  const OfflineBanner(
+                    message: 'Mất kết nối trạm LoRa. Kiểm tra IP/port broker.',
+                  ),
+                  const SizedBox(height: 6),
+                ] else if (reading == null) ...[
+                  const SizedBox(height: 12),
+                  const OfflineBanner(
+                    message: 'Trạm chưa gửi dữ liệu mới cho thửa này.',
+                  ),
+                  const SizedBox(height: 6),
+                ],
+                if (mqtt.enabled) ...[
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Chỉ nhận dữ liệu khi app đang mở màn hình.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                 ],
               ],
             ),
@@ -242,7 +301,10 @@ class _FactTile extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             label,
-            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 2),
           Text(
