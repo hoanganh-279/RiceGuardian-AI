@@ -1,0 +1,2 @@
+# Site API — lightweight (no ML)
+-r ../../packages/rg_core/requirements-base.txt
