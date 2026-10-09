@@ -213,6 +213,10 @@ def begin_google_login(*, id_token="", access_token=""):
 
     if identity.verified_at:
         return _issue_site_token(identity)
+    if not current_app.config.get("SITE_REQUIRE_EMAIL_CODE", True):
+        identity.verified_at = _utcnow()
+        db.session.commit()
+        return _issue_site_token(identity)
     return _send_code(identity)
 
 

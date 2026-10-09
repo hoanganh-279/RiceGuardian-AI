@@ -61,6 +61,7 @@ class Config:
     BLB_UAV_SEG_MODEL_PATH = os.getenv("BLB_UAV_SEG_MODEL_PATH", "")
     BLB_MS_PREVIEW_BANDS = _ms_preview_bands()
     SITE_GOOGLE_CLIENT_ID = (os.getenv("SITE_GOOGLE_CLIENT_ID") or "").strip()
+    SITE_REQUIRE_EMAIL_CODE = os.getenv("SITE_REQUIRE_EMAIL_CODE", "1") == "1"
     SMTP_HOST = (os.getenv("SMTP_HOST") or "smtp.gmail.com").strip()
     SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
     SMTP_USER = (os.getenv("SMTP_USER") or "").strip()
